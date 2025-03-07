@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #3498db;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Login/Register Section -->
+    <div id="authSection" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+            <div class="text-center mb-8">
+                <i class="bi bi-lightning-charge-fill text-5xl text-blue-500"></i>
+                <h2 class="text-2xl font-bold mt-2">EV Management System</h2>
+            </div>
+            
+            <div class="flex justify-center mb-6">
+                <button onclick="toggleAuth('login')" id="loginBtn" class="px-4 py-2 mx-2 rounded font-medium bg-blue-500 text-white">Login</button>
+                <button onclick="toggleAuth('register')" id="registerBtn" class="px-4 py-2 mx-2 rounded font-medium bg-gray-300">Register</button>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <input type="email" placeholder="Email" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-6">
+                    <input type="password" placeholder="Password" class="w-full p-2 border rounded" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">Login</button>
+            </form>
+
+            <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+                <div class="mb-4">
+                    <input type="text" placeholder="Full Name" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <input type="email" placeholder="Email" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-6">
+                    <input type="password" placeholder="Password" class="w-full p-2 border rounded" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">Register</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div id="dashboardSection" class="hidden">
+        <!-- Navigation -->
+        <nav class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <i class="bi bi-lightning-charge-fill text-3xl text-blue-500"></i>
+                        <span class="ml-2 font-bold text-xl">EVMS</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span id="userEmail" class="text-gray-600"></span>
+                        <button onclick="logout()" class="text-red-500 hover:text-red-700">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <!-- Admin Panel -->
+            <div id="adminPanel" class="hidden">
+                <h2 class="text-2xl font-bold mb-4">Admin Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- User Management -->
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4">User Management</h3>
+                        <div id="usersList" class="space-y-4">
+                            <!-- Users will be dynamically added here -->
+                        </div>
+                    </div>
+                    <!-- Vehicle Management -->
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4">Vehicle Management</h3>
+                        <div id="vehiclesList" class="space-y-4">
+                            <!-- Vehicles will be dynamically added here -->
+                        </div>
+                    </div>
+                    <!-- Charging Stations -->
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4">Charging Stations</h3>
+                        <div id="stationsList" class="space-y-4">
+                            <!-- Stations will be dynamically added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Dashboard -->
+            <div id="userDashboard">
+                <!-- Vehicle Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4">My Vehicles</h3>
+                        <button onclick="showAddVehicleModal()" class="bg-blue-500 text-white px-4 py-2 rounded mb-4">
+                            <i class="bi bi-plus"></i> Add Vehicle
+                        </button>
+                        <div id="userVehicles" class="space-y-4">
+                            <!-- User vehicles will be added here -->
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4">Battery Status</h3>
+                        <div id="batteryStatus" class="space-y-4">
+                            <!-- Battery status will be shown here -->
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4">Nearby Stations</h3>
+                        <div id="nearbyStations" class="space-y-4">
+                            <!-- Nearby stations will be shown here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maintenance and Billing -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4">Maintenance Schedule</h3>
+                        <div id="maintenanceSchedule" class="space-y-4">
+                            <!-- Maintenance schedule will be shown here -->
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <h3 class="text-xl font-semibold mb-4">Billing History</h3>
+                        <div id="billingHistory" class="space-y-4">
+                            <!-- Billing history will be shown here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Vehicle Modal -->
+    <div id="addVehicleModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+            <h3 class="text-xl font-semibold mb-4">Add New Vehicle</h3>
+            <form onsubmit="handleAddVehicle(event)">
+                <div class="mb-4">
+                    <input type="text" placeholder="Vehicle Model" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <input type="text" placeholder="Registration Number" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <input type="number" placeholder="Battery Capacity (kWh)" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="closeAddVehicleModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Add Vehicle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // MongoDB Collection name and app slug
+        const APP_SLUG = "evms-123456";
+        const USERS_COLLECTION = "users";
+        const VEHICLES_COLLECTION = "vehicles";
+        const STATIONS_COLLECTION = "stations";
+
+        // Current user data
+        let currentUser = null;
+
+        // Toggle between login and register forms
+        function toggleAuth(type) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const loginBtn = document.getElementById('loginBtn');
+            const registerBtn = document.getElementById('registerBtn');
+
+            if (type === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                loginBtn.classList.add('bg-blue-500', 'text-white');
+                loginBtn.classList.remove('bg-gray-300');
+                registerBtn.classList.add('bg-gray-300');
+                registerBtn.classList.remove('bg-blue-500', 'text-white');
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                registerBtn.classList.add('bg-blue-500', 'text-white');
+                registerBtn.classList.remove('bg-gray-300');
+                loginBtn.classList.add('bg-gray-300');
+                loginBtn.classList.remove('bg-blue-500', 'text-white');
+            }
+        }
+
+        // Handle login
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = event.target.elements[0].value;
+            const password = event.target.elements[1].value;
+
+            try {
+                const response = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/mongodb', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer YKcIKF0WLJNxCQlMDaJdCFBntOn2',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        appSlug: APP_SLUG,
+                        action: 'read',
+                        collection: USERS_COLLECTION,
+                        conditions: { email, password }
+                    })
+                });
+
+                const data = await response.json();
+                if (data.result && data.result.length > 0) {
+                    currentUser = data.result[0];
+                    showDashboard();
+                } else {
+                    alert('Invalid credentials');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed');
+            }
+        }
+
+        // Handle register
+        async function handleRegister(event) {
+            event.preventDefault();
+            const name = event.target.elements[0].value;
+            const email = event.target.elements[1].value;
+            const password = event.target.elements[2].value;
+
+            try {
+                const response = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/mongodb', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer YKcIKF0WLJNxCQlMDaJdCFBntOn2',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        appSlug: APP_SLUG,
+                        action: 'create',
+                        collection: USERS_COLLECTION,
+                        data: { name, email, password, role: 'user' }
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Registration successful! Please login.');
+                    toggleAuth('login');
+                } else {
+                    alert('Registration failed');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Registration failed');
+            }
+        }
+
+        // Show dashboard
+        function showDashboard() {
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('dashboardSection').classList.remove('hidden');
+            document.getElementById('userEmail').textContent = currentUser.email;
+
+            if (currentUser.role === 'admin') {
+                document.getElementById('adminPanel').classList.remove('hidden');
+                document.getElementById('userDashboard').classList.add('hidden');
+                loadAdminData();
+            } else {
+                loadUserData();
+            }
+        }
+
+        // Load admin data
+        async function loadAdminData() {
+            // Load users
+            const usersResponse = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/mongodb', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer YKcIKF0WLJNxCQlMDaJdCFBntOn2',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    appSlug: APP_SLUG,
+                    action: 'read',
+                    collection: USERS_COLLECTION
+                })
+            });
+
+            const usersData = await usersResponse.json();
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = usersData.result.map(user => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                        <div class="font-medium">${user.name}</div>
+                        <div class="text-sm text-gray-600">${user.email}</div>
+                    </div>
+                    <button onclick="deleteUser('${user._id}')" class="text-red-500">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            // Similar functions for vehicles and stations...
+        }
+
+        // Load user data
+        async function loadUserData() {
+            // Load user's vehicles
+            const vehiclesResponse = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/mongodb', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer YKcIKF0WLJNxCQlMDaJdCFBntOn2',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    appSlug: APP_SLUG,
+                    action: 'read',
+                    collection: VEHICLES_COLLECTION,
+                    conditions: { userId: currentUser._id }
+                })
+            });
+
+            const vehiclesData = await vehiclesResponse.json();
+            const userVehicles = document.getElementById('userVehicles');
+            userVehicles.innerHTML = vehiclesData.result.map(vehicle => `
+                <div class="p-4 bg-gray-50 rounded">
+                    <div class="font-medium">${vehicle.model}</div>
+                    <div class="text-sm text-gray-600">Reg: ${vehicle.registrationNumber}</div>
+                    <div class="mt-2">
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${vehicle.batteryLevel}%"></div>
+                        </div>
+                        <span class="text-sm text-gray-600">${vehicle.batteryLevel}% Battery</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Load nearby stations
+            loadNearbyStations();
+            // Load maintenance schedule
+            loadMaintenanceSchedule();
+            // Load billing history
+            loadBillingHistory();
+        }
+
+        // Add vehicle modal functions
+        function showAddVehicleModal() {
+            document.getElementById('addVehicleModal').classList.remove('hidden');
+        }
+
+        function closeAddVehicleModal() {
+            document.getElementById('addVehicleModal').classList.add('hidden');
+        }
+
+        async function handleAddVehicle(event) {
+            event.preventDefault();
+            const model = event.target.elements[0].value;
+            const registrationNumber = event.target.elements[1].value;
+            const batteryCapacity = event.target.elements[2].value;
+
+            try {
+                const response = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/mongodb', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer YKcIKF0WLJNxCQlMDaJdCFBntOn2',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        appSlug: APP_SLUG,
+                        action: 'create',
+                        collection: VEHICLES_COLLECTION,
+                        data: {
+                            userId: currentUser._id,
+                            model,
+                            registrationNumber,
+                            batteryCapacity,
+                            batteryLevel: 100
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    closeAddVehicleModal();
+                    loadUserData();
+                } else {
+                    alert('Failed to add vehicle');
+                }
+            } catch (error) {
+                console.error('Add vehicle error:', error);
+                alert('Failed to add vehicle');
+            }
+        }
+
+        // Logout function
+        function logout() {
+            currentUser = null;
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('dashboardSection').classList.add('hidden');
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            toggleAuth('login');
+        });
+
+        // Simulated functions (replace with real implementations)
+        function loadNearbyStations() {
+            const stations = [
+                { name: 'Station A', distance: '2.5 km', available: true },
+                { name: 'Station B', distance: '3.8 km', available: false },
+                { name: 'Station C', distance: '5.1 km', available: true }
+            ];
+
+            document.getElementById('nearbyStations').innerHTML = stations.map(station => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                        <div class="font-medium">${station.name}</div>
+                        <div class="text-sm text-gray-600">${station.distance}</div>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="px-2 py-1 text-sm rounded ${station.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${station.available ? 'Available' : 'Busy'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadMaintenanceSchedule() {
+            const schedule = [
+                { service: 'Battery Check', date: '2024-02-15', status: 'Pending' },
+                { service: 'Tire Rotation', date: '2024-03-01', status: 'Scheduled' }
+            ];
+
+            document.getElementById('maintenanceSchedule').innerHTML = schedule.map(item => `
+                <div class="p-3 bg-gray-50 rounded">
+                    <div class="font-medium">${item.service}</div>
+                    <div class="text-sm text-gray-600">Date: ${item.date}</div>
+                    <div class="mt-2">
+                        <span class="px-2 py-1 text-sm rounded bg-yellow-100 text-yellow-800">${item.status}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadBillingHistory() {
+            const bills = [
+                { date: '2024-01-15', amount: '$45.20', type: 'Charging' },
+                { date: '2024-01-10', amount: '$120.00', type: 'Maintenance' }
+            ];
+
+            document.getElementById('billingHistory').innerHTML = bills.map(bill => `
+                <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div>
+                        <div class="font-medium">${bill.type}</div>
+                        <div class="text-sm text-gray-600">${bill.date}</div>
+                    </div>
+                    <div class="font-medium text-blue-600">${bill.amount}</div>
+                </div>
+            `).join('');
+        }
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
